@@ -409,9 +409,9 @@
         webhook: { url: '', route: '' },
         branding: {
             logo: '', name: '',
-            welcomeText: 'Welcome!',
-            responseTimeText: 'We usually respond in a few minutes',
-            poweredBy: { text: 'Powered by n8n', link: 'https://n8n.io' }
+            welcomeText: '',
+            responseTimeText: '',
+            poweredBy: { text: 'Powered by n8n', link: 'https://n8n.partnerlinks.io/m8a94i19zhqq?utm_source=nocodecreative.io' }
         },
         style: { primaryColor: '', secondaryColor: '', position: 'right', backgroundColor: '#ffffff', fontColor: '#141414' }
     };
