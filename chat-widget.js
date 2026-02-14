@@ -1,3 +1,4 @@
+// n8n Chat Widget - v1.0.2
 (function () {
     const styles = `
         /* ========================================
@@ -212,6 +213,11 @@
             word-wrap: break-word; 
             font-size: 14px; 
             line-height: 1.6; 
+        }
+
+        .n8n-chat-widget .chat-message p {
+            font-size: 14px;
+            margin: 0;
         }
 
         /* User messages: Right aligned */
@@ -438,7 +444,7 @@
     function saveSession() {
         if (currentSessionId) {
             localStorage.setItem(STORAGE_KEYS.SESSION_ID, currentSessionId);
-            localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(chatMessages.filter(m => m.text !== 'Thinking...')));
+            localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(chatMessages.filter(m => m.text !== 'Typing..')));
             localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
         }
         localStorage.setItem(STORAGE_KEYS.IS_OPEN, chatContainer.classList.contains('open'));
@@ -561,12 +567,14 @@
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
         const nodes = [];
         while (walker.nextNode()) nodes.push(walker.currentNode);
+
+        var match;
         nodes.forEach(node => {
             if (node.parentNode?.closest('a')) return;
             const text = node.textContent;
             if (!urlRegex.test(text)) return;
             const frag = document.createDocumentFragment();
-            let lastIdx = 0; match;
+            let lastIdx = 0;
             urlRegex.lastIndex = 0;
             while ((match = urlRegex.exec(text)) !== null) {
                 if (match.index > lastIdx) frag.appendChild(document.createTextNode(text.slice(lastIdx, match.index)));
@@ -611,7 +619,7 @@
         chatMessages = [];
         textarea.value = '';
 
-        appendMessage('Hi, I`m Sade, your digital assistant. How may I assist you today?', 'bot');
+        appendMessage("Hi, I'm Sade, your digital assistant. How may I assist you today?", 'bot');
 
         if (!config.webhook.url) return;
 
@@ -625,8 +633,8 @@
             const text = Array.isArray(data) ? data[0]?.output : data?.output;
             if (text) appendMessage(text, 'bot', { formatText: true });
         } catch (e) {
-            console.error(e);
-            appendMessage('I`m sorry, I`m having trouble starting the conversation. Please type your question below!', 'bot');
+            console.error('[N8N Chat Widget] Initialization Error:', e);
+            appendMessage("I'm having trouble starting a new chat. Please try again or type your question below.", 'bot');
         }
     }
 
@@ -637,7 +645,7 @@
 
         appendMessage(cleanText, 'user');
         textarea.value = '';
-        const placeholder = appendMessage('Thinking...', 'bot');
+        const placeholder = appendMessage('Typing..', 'bot');
 
         try {
             const res = await fetch(config.webhook.url, {
@@ -645,16 +653,26 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'sendMessage', sessionId: currentSessionId, route: config.webhook.route, chatInput: cleanText })
             });
+
+            if (!res.ok) {
+                throw new Error(`Server responded with status: ${res.status}`);
+            }
+
             const data = await res.json();
             const botText = Array.isArray(data) ? data[0]?.output : data?.output;
-            const finalBotText = botText || 'I`m sorry, something went wrong.';
+            const finalBotText = botText || "I'm sorry, something went wrong.";
             placeholder.innerHTML = formatBotMessage(finalBotText);
             linkify(placeholder);
-            const msgIdx = chatMessages.findIndex(m => m.text === 'Thinking...');
+            const msgIdx = chatMessages.findIndex(m => m.text === 'Typing..');
             if (msgIdx !== -1) chatMessages[msgIdx] = { text: finalBotText, role: 'bot', options: { formatText: true } };
             saveSession();
         } catch (e) {
-            placeholder.textContent = 'We could not reach the server. Please try again.';
+            console.error('[N8N Chat Widget] Send Message Error:', e);
+            if (e.name === 'TypeError' && e.message === 'Failed to fetch') {
+                placeholder.textContent = "I'm having trouble connecting to my knowledge base. Please check your connection and try again.";
+            } else {
+                placeholder.textContent = "I'm sorry, I encountered an error. Please try again.";
+            }
         }
     }
 
