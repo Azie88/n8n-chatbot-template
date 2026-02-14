@@ -312,8 +312,8 @@
             position: fixed; 
             bottom: 15px; 
             right: 15px; 
-            width: 45px; 
-            height: 45px; 
+            width: 55px; 
+            height: 55px; 
             border-radius: 50%;
             background: var(--chat--color-secondary); 
             color: white; 
@@ -337,8 +337,8 @@
             flex-shrink: 0; 
         }
         .n8n-chat-widget .chat-toggle svg { 
-            width: 20px; 
-            height: 20px; 
+            width: 25px; 
+            height: 25px; 
             fill: currentColor; 
         }
         .n8n-chat-widget .chat-toggle .text { 
